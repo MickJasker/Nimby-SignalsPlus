@@ -19,6 +19,7 @@ struct AtbSignalTask {
   state: AtbSignalState,
   signal_id: ID<Signal>,
   speed: f64,
+  station_stop_ahead: bool,
 }
  
 pub fn AtbSignal::event_signal_lookahead(
@@ -35,7 +36,17 @@ pub fn AtbSignal::event_signal_lookahead(
   let speed = motion.presence.get().speed;
   let max_braking_rate = motion.dynamics.max_regular_braking;
   let stopping_distance = speed * speed / (2.0 * max_braking_rate);
-  let task = AtbSignalTask::new(AtbSignalState::Stop, signal.id, 0.0);
+  let task mut= AtbSignalTask::new(AtbSignalState::Idle, signal.id, 0.0, false);
+
+  // Check if train has a scheduled station stop within braking distance
+  let has_station_stop mut= false;
+  if let schedule_stop &= motion.schedule_stop.get() {
+    // Train has a scheduled stop - check if it's within braking distance after the signal
+    if train_distance <= stopping_distance {
+      has_station_stop = true;
+    }
+  }
+  task.station_stop_ahead = has_station_stop;
 
   if (check == SignalCheck::Stop) {
     if train_distance <= 25.0 {
@@ -53,22 +64,20 @@ pub fn AtbSignal::event_signal_lookahead(
       task.state = AtbSignalState::Pass;
       log("Signal {}: Pass check triggered. Train distance: {}, Stopping distance: {}", signal.id, train_distance, stopping_distance);
     }
-  } else {
-    task.state = AtbSignalState::Idle;
   }
 
   sc.queue_attach(signal, task);
 }
 
 pub fn AtbSignal::event_signal_pass_by(
-  self: &AtbSignal, 
-  ctx: &EventCtx, 
-  train: &Train, 
-  motion: &Motion, 
-  signal: &Signal, 
+  self: &AtbSignal,
+  ctx: &EventCtx,
+  train: &Train,
+  motion: &Motion,
+  signal: &Signal,
   sc: &mut SimController
   ) {
-    let task = AtbSignalTask::new(AtbSignalState::Idle, signal.id, 0.0);
+    let task = AtbSignalTask::new(AtbSignalState::Idle, signal.id, 0.0, false);
     sc.queue_attach(signal, task);
 }
 
@@ -86,6 +95,10 @@ pub fn AtbSignal::event_signal_texture_state(
       }
 
       if state.state == AtbSignalState::Pass {
+        // Check if station stop ahead within braking distance
+        if state.station_stop_ahead {
+          return 3;
+        }
         // Check if any signal ahead shows stop - if so, show caution
         for signal_id in self.signals_ahead.iter() {
           let ahead_task = db.view<AtbSignalTask>(signal_id);
