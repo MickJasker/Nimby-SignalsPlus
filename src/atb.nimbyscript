@@ -3,14 +3,16 @@ script meta {
   api: nimbyrails.v1,
 }
 
-pub enum AtbSignalState {
+enum AtbSignalState {
   Idle,
   Pass,
   Stop,
+  Caution,
 }
 
 pub struct AtbSignal extend Signal {
-  
+  // List of signals ahead on the track, used to determine if the signal should show a caution aspect based on the state of those signals.
+  signals_ahead: &Vec<ID<Signal>>,
 }
 
 struct AtbSignalTask {
@@ -71,25 +73,37 @@ pub fn AtbSignal::event_signal_pass_by(
 }
 
 pub fn AtbSignal::event_signal_texture_state(
-  self: &AtbSignal, 
-  db: &DB, 
-  signal: &Signal, 
+  self: &AtbSignal,
+  db: &DB,
+  signal: &Signal,
   clock_us: i64
   ): i64 {
-    let state = db.view<AtbSignalTask>(signal.id);
+    let task = db.view<AtbSignalTask>(signal.id);
 
-    if (state == AtbSignalState::Idle) {
-      return 0;
+    if let state &= task {
+      if state.state == AtbSignalState::Stop {
+        return 2;
+      }
+
+      if state.state == AtbSignalState::Pass {
+        // Check if any signal ahead shows stop - if so, show caution
+        for signal_id in self.signals_ahead.iter() {
+          let ahead_task = db.view<AtbSignalTask>(signal_id);
+          if let ahead_state &= ahead_task {
+            if ahead_state.state == AtbSignalState::Stop {
+              return 3;
+            }
+          }
+        }
+        return 1;
+      }
+
+      if state.state == AtbSignalState::Caution {
+        return 3;
+      }
     }
 
-    if (state == AtbSignalState::Pass) {
-      return 1;
-    }
-
-    if (state == AtbSignalState::Stop) {
-      return 2;
-    }
-
-    return -1;
+    // Idle or no state
+    return 0;
 }
 
