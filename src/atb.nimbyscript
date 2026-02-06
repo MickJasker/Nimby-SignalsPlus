@@ -1,0 +1,95 @@
+script meta {
+  lang: nimbyscript.v1,
+  api: nimbyrails.v1,
+}
+
+pub enum AtbSignalState {
+  Idle,
+  Pass,
+  Stop,
+}
+
+pub struct AtbSignal extend Signal {
+  
+}
+
+struct AtbSignalTask {
+  state: AtbSignalState,
+  signal_id: ID<Signal>,
+  speed: f64,
+}
+ 
+pub fn AtbSignal::event_signal_lookahead(
+  self: &AtbSignal,
+  ctx: &EventCtx,
+  train: &Train,
+  motion: &Motion,
+  signal: &Signal,
+  train_distance: f64,
+  check: SignalCheck,
+  sc: &mut SimpleSimController,
+  result: &mut SignalLookaheadResult
+) {
+  let speed = motion.presence.get().speed;
+  let max_braking_rate = motion.dynamics.max_regular_braking;
+  let stopping_distance = speed * speed / (2.0 * max_braking_rate);
+  let task = AtbSignalTask::new(AtbSignalState::Stop, signal.id, 0.0);
+
+  if (check == SignalCheck::Stop) {
+    if train_distance <= 25.0 {
+      result.max_speed = 10.0;
+    } else if train_distance <= 100.0 {
+      result.max_speed = 40.0;
+    }
+  }
+
+  if (train_distance + 100.0 <= stopping_distance) {
+    if (check == SignalCheck::Stop) {
+      task.state = AtbSignalState::Stop;
+      log("Signal {}: Stop check triggered. Train distance: {}, Stopping distance: {}", signal.id, train_distance, stopping_distance);
+    } else {
+      task.state = AtbSignalState::Pass;
+      log("Signal {}: Pass check triggered. Train distance: {}, Stopping distance: {}", signal.id, train_distance, stopping_distance);
+    }
+  } else {
+    task.state = AtbSignalState::Idle;
+  }
+
+  sc.queue_attach(signal, task);
+}
+
+pub fn AtbSignal::event_signal_pass_by(
+  self: &AtbSignal, 
+  ctx: &EventCtx, 
+  train: &Train, 
+  motion: &Motion, 
+  signal: &Signal, 
+  sc: &mut SimController
+  ) {
+    let task = AtbSignalTask::new(AtbSignalState::Idle, signal.id, 0.0);
+    sc.queue_attach(signal, task);
+}
+
+pub fn AtbSignal::event_signal_texture_state(
+  self: &AtbSignal, 
+  db: &DB, 
+  signal: &Signal, 
+  clock_us: i64
+  ): i64 {
+    let state = db.view<AtbSignalTask>(signal.id);
+
+    if (state == AtbSignalState::Idle) {
+      return 0;
+    }
+
+    if (state == AtbSignalState::Pass) {
+      return 1;
+    }
+
+    if (state == AtbSignalState::Stop) {
+      return 2;
+    }
+
+    return -1;
+}
+
