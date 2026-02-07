@@ -6,9 +6,72 @@ This project implements ATB (Automatic Train Protection) signals for NIMBY Rails
 
 ## Documentation Reference
 
-**Primary documentation**: https://wiki.nimbyrails.com/NimbyScript
+- **NimbyScript Language**: https://wiki.nimbyrails.com/NimbyScript
+- **Modding Guide**: https://steamcommunity.com/sharedfiles/filedetails/?id=2268014666
 
 Always consult the wiki for the most up-to-date API reference and language features.
+
+---
+
+## Mod Configuration (mod.txt)
+
+The `mod.txt` file configures the mod using INI syntax. Required and optional sections:
+
+### [ModMeta] - Required
+
+```ini
+[ModMeta]
+schema=1
+name=Mod Name
+author=Author Name
+desc=Description of the mod
+version=1.0.0
+```
+
+### [Script] - For NimbyScript mods
+
+```ini
+[Script]
+id=UNIQUE_SCRIPT_ID
+name=Display Name
+source=src/script.nimbyscript
+```
+
+### [SignalTextures] - For custom signal visuals
+
+```ini
+[SignalTextures]
+id=UNIQUE_TEXTURE_ID
+name_loc=localization_key
+name_en=English Name
+state=textures/state0.png
+state=textures/state1.png
+state=textures/state2.png
+```
+
+- Textures are listed in order matching `event_signal_texture_state` return values
+- Textures must be 64x64 pixels, 32-bit RGBA PNG
+
+### [SignalTemplate] - For custom signal types
+
+```ini
+[SignalTemplate]
+name_en=English Name
+name_loc=localization_key
+kind=path
+textures=TEXTURE_ID_REFERENCE
+extend=PubStructName
+```
+
+- `kind`: `path`, `balise`, `oneway`, `noway`, `marker`, or `platform_stop`
+- `extend`: References the `pub struct` name from your script
+- `textures`: References a `[SignalTextures]` id
+
+### Naming Conventions
+
+- IDs must be globally unique across all mods
+- Use only Latin characters, digits, and underscores
+- Use UPPERCASE for IDs by convention
 
 ---
 
@@ -111,11 +174,14 @@ pub fn StructName::method_name(self: &StructName, ctx: &EventCtx): Type {
 
 ## Critical Language Rules
 
-### DO NOT use division or modulo operators directly
-The `/` and `%` operators are **not supported**. Use safe alternatives:
+### Integer division and modulo require safe functions
+The `/` and `%` operators work for `f64` but **not for integers**. Use safe alternatives for integers:
 ```nimbyscript
-let result = zdiv(a, b);  // returns 0 if b is 0
-let remainder = zmod(a, b);  // returns 0 if b is 0
+let result = zdiv(a, b);  // integer division, returns 0 if b is 0
+let remainder = zmod(a, b);  // integer modulo, returns 0 if b is 0
+
+// For floats, regular division works:
+let f_result = speed * speed / (2.0 * max_braking);
 ```
 
 ### Method chaining is limited to one level
@@ -261,7 +327,7 @@ let length = dynamics.length;
 ```nimbyscript
 let speed = motion.presence.get().speed;
 let max_braking = motion.dynamics.max_regular_braking;
-let stopping_distance = zdiv(speed * speed, 2.0 * max_braking);
+let stopping_distance = speed * speed / (2.0 * max_braking);
 ```
 
 ### Attaching State to Signal
@@ -296,23 +362,46 @@ Enable logging manually in the game UI.
 
 ## Common Mistakes to Avoid
 
-1. **Using `/` or `%` operators** - Use `zdiv()` and `zmod()` instead
+1. **Using `/` or `%` on integers** - Use `zdiv()` and `zmod()` for integers (floats can use `/`)
 2. **Chaining multiple method calls** - Use intermediate variables
 3. **Forgetting explicit `return`** - Always use `return` statement
 4. **Comparing pointers directly** - Use `if let` or `let else` for validation
 5. **Modifying pub struct schema incorrectly** - Only add/reorder fields, never rename or change types
 6. **Not attaching private structs** - They're deleted end-of-frame unless attached to game objects
+7. **Defining private methods on pub structs** - Private functions cannot be methods on pub structs; inline the logic instead
+8. **Using complex types in standalone functions** - Types like `&Vec<ID<Signal>>` can only be used as struct fields, not function parameters
 
 ---
 
 ## Project-Specific Notes
 
-This project implements ATB (Automatic Train Braking) signals with:
-- **AtbSignalState enum**: Idle, Pass, Stop states
-- **AtbSignal pub struct**: Extends Signal for UI exposure
-- **AtbSignalTask private struct**: Holds runtime state attached to signals
+This project implements ATB (Automatic Train Braking) signals.
 
-The signal enforces speed limits based on:
-- Signal check state (Stop vs Pass)
-- Train distance from signal
-- Calculated stopping distance based on train dynamics
+### Script Structure
+
+- **AtbSignalState enum**: `Idle`, `Pass`, `Stop`
+- **AtbSignal pub struct**: Extends Signal, contains `signals_ahead` list
+- **AtbSignalTask private struct**: Runtime state with `state` and `station_stop_ahead`
+
+### Signal Behavior
+
+The signal displays different textures based on state:
+
+| Texture Index | State | Condition |
+|---------------|-------|-----------|
+| 0 | Idle | Train > 1km away or outside braking range |
+| 1 | Pass | Signal clear, no stops ahead |
+| 2 | Stop | Signal shows stop |
+| 3 | Caution | Pass but stop signal ahead OR station stop within braking distance |
+
+### Speed Limits
+
+When approaching a stop signal:
+- Within 25m: max 10 km/h
+- Within 100m: max 40 km/h
+
+### Mod Files
+
+- `src/atb.nimbyscript` - Signal logic
+- `mod.txt` - Mod configuration
+- `textures/` - Signal state textures (idle, pass, stop, caution)
