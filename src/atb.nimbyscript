@@ -29,6 +29,12 @@ pub fn AtbSignal::event_signal_lookahead(
   sc: &mut SimpleSimController,
   result: &mut SignalLookaheadResult
 ) {
+  // show idle if train is farther than 1km, to avoid unnecessary processing
+  if train_distance > 1000.0 {
+    sc.queue_attach(signal, AtbSignalTask::new(AtbSignalState::Idle, false));
+    return;
+  }
+
   let speed = motion.presence.get().speed;
   let max_braking = motion.dynamics.max_regular_braking;
   let stopping_distance = speed * speed / (2.0 * max_braking);
