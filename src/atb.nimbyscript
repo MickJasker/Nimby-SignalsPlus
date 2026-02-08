@@ -7,10 +7,15 @@ enum AtbSignalState {
   Idle,
   Pass,
   Stop,
+  Caution,
 }
 
 pub struct AtbSignal extend Signal {
   signals_ahead: &Vec<ID<Signal>>,
+}
+
+pub struct AtbStation extend Station {
+  approach_signals: &Vec<ID<Signal>>,
 }
 
 struct AtbSignalTask {
@@ -37,32 +42,53 @@ pub fn AtbSignal::event_signal_lookahead(
     return;
   }
 
-  if let presence &= motion.presence.get() {
-    if check == SignalCheck::Stop {
-      if train_distance <= 25.0 {
-        result.max_speed = 10.0;
-      } else if train_distance <= 100.0 {
-        result.max_speed = 40.0;
+  let state mut= AtbSignalState::Idle;
+
+  if check == SignalCheck::Stop {
+    if train_distance <= 25.0 {
+      result.max_speed = 10.0;
+    } else if train_distance <= 100.0 {
+      result.max_speed = 40.0;
+    }
+  }
+
+  if check == SignalCheck::Stop {
+    state = AtbSignalState::Stop;
+  } else {
+    state = AtbSignalState::Pass;
+  }
+
+  if let run_dispatch &= motion.run_dispatch.get() {
+    let run &= run_dispatch.run;
+    if let line &= ctx.db.view(run.line_id) {
+      if let current_stop &= run_dispatch.current_stop(line) {
+        if let station &= ctx.db.view(current_stop.station_id) {
+          if let atb_station &= ctx.db.view<AtbStation>(station) {
+            let is_approach_signal mut= false;
+            for approach_signal_id in atb_station.approach_signals.iter() {
+              if (approach_signal_id.equals(signal.id)) {
+                is_approach_signal = true;
+                break;
+              }
+            }
+
+            if is_approach_signal {
+              state = AtbSignalState::Caution;
+            }
+          }
+        }
       }
     }
-
-    let state mut= AtbSignalState::Idle;
-
-    if check == SignalCheck::Stop {
-      state = AtbSignalState::Stop;
-    } else {
-      state = AtbSignalState::Pass;
-    }
-
-    if let old_state &= ctx.db.view<AtbSignalTask>(signal) {
-      sc.queue_erase(old_state);
-    }
-
-    let task = AtbSignalTask::new();
-    task.state = state;
-    task.station_stop_ahead = false;
-    sc.queue_attach(signal, task);
   }
+
+  if let old_state &= ctx.db.view<AtbSignalTask>(signal) {
+    sc.queue_erase(old_state);
+  }
+
+  let task = AtbSignalTask::new();
+  task.state = state;
+  task.station_stop_ahead = false;
+  sc.queue_attach(signal, task);
 }
 
 pub fn AtbSignal::event_signal_pass_by(
@@ -82,8 +108,13 @@ pub fn AtbSignal::event_signal_texture_state(
   self: &AtbSignal,
   db: &DB,
   signal: &Signal,
-  clock_us: i64
+  clock_us: i64,
+  core_state: i64
 ): i64 {
+  if (core_state == 1) {
+    return 0;
+  }
+
   if let task &= db.view<AtbSignalTask>(signal) {
     if task.state == AtbSignalState::Stop {
       return 2;
@@ -91,6 +122,10 @@ pub fn AtbSignal::event_signal_texture_state(
 
     if task.state == AtbSignalState::Pass {
       return 1;
+    }
+
+    if task.state == AtbSignalState::Caution {
+      return 3;
     }
   }
   
@@ -103,6 +138,6 @@ pub fn AtbSignal::event_signal_texture_state(
       }
     }
   }
-  
+
   return 0;
 }
