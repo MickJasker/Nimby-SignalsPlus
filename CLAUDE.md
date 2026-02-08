@@ -1,0 +1,64 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project Overview
+
+ATB (Automatic Train Braking) signal system mod for NIMBY Rails. Implements 4-aspect signaling (Idle, Pass, Stop, Caution) with automatic speed enforcement.
+
+## Development Workflow
+
+1. Edit `src/atb.nimbyscript` directly
+2. NIMBY Rails hot-reloads scripts on save
+3. Test in-game by placing signals and running trains
+
+No build step required - the game interprets NimbyScript directly.
+
+## Key Documentation
+
+- **NimbyScript Language**: https://wiki.nimbyrails.com/NimbyScript
+- **Modding Guide**: https://steamcommunity.com/sharedfiles/filedetails/?id=2268014666
+- **Detailed NimbyScript Reference**: See `src/AGENTS.md`
+
+## NimbyScript Critical Rules
+
+These language quirks cause common errors:
+
+1. **Integer division**: Use `zdiv(a, b)` and `zmod(a, b)` - the `/` and `%` operators only work for floats
+2. **No method chaining**: `obj.method1().method2()` won't compile - use intermediate variables
+3. **Explicit return required**: Functions must use `return` statement
+4. **Pointer validation**: Use `if let x &= pointer { }` or `let x &= pointer else { return; }`
+5. **Private structs deleted end-of-frame**: Must attach to game objects via `sc.queue_attach()`
+6. **No private methods on pub structs**: Inline the logic instead
+7. **Complex types in function params**: Types like `&Vec<ID<Signal>>` only work as struct fields
+
+## Architecture
+
+### Script Structure (`src/atb.nimbyscript`)
+
+- **AtbSignalState enum**: Idle, Pass, Stop, Caution
+- **AtbSignal pub struct**: Extends Signal, player-configurable `signals_ahead` list
+- **AtbStation pub struct**: Extends Station, `approach_signals` for caution display
+- **AtbSignalTask private struct**: Runtime state attached to signals
+
+### Event Handlers
+
+| Handler | Purpose |
+|---------|---------|
+| `event_signal_lookahead` | Called up to 15km ahead, sets speed limits and signal state |
+| `event_signal_pass_by` | Resets state when train passes |
+| `event_signal_texture_state` | Returns texture index (0=idle, 1=pass, 2=stop, 3=caution) |
+
+### Texture Mapping
+
+Textures in `mod.txt` are indexed in order:
+- 0: `textures/idle.png`
+- 1: `textures/pass.png`
+- 2: `textures/stop.png`
+- 3: `textures/caution.png`
+
+Textures must be 64x64 pixels, 32-bit RGBA PNG.
+
+## Debugging
+
+Use `log("message", var1, var2)` - enable logging in game UI (has CPU cost).
