@@ -14,10 +14,10 @@ source=src/atb.nimbyscript
 id=ATB_SIGNAL_TEXTURES
 name_loc=atb_signal_textures
 name_en=ATB Signal
-state=textures/idle.png
-state=textures/pass.png
-state=textures/stop.png
-state=textures/caution.png
+state=textures/none.png
+state=textures/green.png
+state=textures/red.png
+state=textures/amber.png
 
 [SignalTemplate]
 name_en=ATB Signal
