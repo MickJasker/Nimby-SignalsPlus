@@ -2,7 +2,7 @@
 schema=1
 name=Signals Plus
 author=MickJ
-desc=
+desc=4-aspect signal system with configurable textures and blinking. Shows idle, pass, stop, and caution aspects.
 version=1.0.0
 
 [Script]

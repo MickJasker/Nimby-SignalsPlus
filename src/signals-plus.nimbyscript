@@ -11,11 +11,27 @@ enum SignalPhase {
 }
 
 pub struct SignalPlusSignal extend Signal {
-  signals_ahead: &Vec<ID<Signal>>,
+  meta { label: "Signals Plus Signal", description: "A signal that shows different aspects based on upcoming signals and train approach. Can show idle, pass, stop, and caution aspects. You can map your own custom signal by changing texture IDs." },
+
+  signals_ahead: &Vec<ID<Signal>> meta { label: "Signals Ahead" },
+
+  off_texture_id: i64 meta { label: "Off Texture ID", default: 0 },
+  
+  idle_texture_id: i64 meta { label: "Idle Texture ID", default: 0, },
+  blink_on_idle: bool meta { label: "Blink on Idle", default: false, description: "If enabled, the signal will blink when in idle state using the 'off' texture." },
+
+  pass_texture_id: i64 meta { label: "Pass Texture ID", default: 1 },
+  blink_on_pass: bool meta { label: "Blink on Pass", default: false, description: "If enabled, the signal will blink when in pass state using the 'off' texture." },
+
+  stop_texture_id: i64 meta { label: "Stop Texture ID", default: 2 },
+  blink_on_stop: bool meta { label: "Blink on Stop", default: false, description: "If enabled, the signal will blink when in stop state using the 'off' texture." },
+
+  caution_texture_id: i64 meta { label: "Caution Texture ID", default: 3 },
+  blink_on_caution: bool meta { label: "Blink on Caution", default: false, description: "If enabled, the signal will blink when in caution state using the 'off' texture." },
 }
 
 pub struct SignalPlusStation extend Station {
-  approach_signals: &Vec<ID<Signal>>,
+  approach_signals: &Vec<ID<Signal>> meta { label: "Approach Signals", description: "List of signals that are considered approach signals for this station. When a train is approaching the station and sees one of these signals and is stopping at that station, the signal will show a caution aspect."},
 }
 
 struct SignalState {
@@ -44,14 +60,6 @@ pub fn SignalPlusSignal::event_signal_lookahead(
   }
 
   let state mut= SignalPhase::Idle;
-
-  if check == SignalCheck::Stop {
-    if train_distance <= 25.0 {
-      result.max_speed = 10.0;
-    } else if train_distance <= 100.0 {
-      result.max_speed = 40.0;
-    }
-  }
 
   if check == SignalCheck::Pass {
     state = SignalPhase::Pass;
@@ -130,36 +138,67 @@ pub fn SignalPlusSignal::event_signal_texture_state(
   clock_us: i64,
   core_state: i64
 ): i64 {
+
+  let cycle = zmod(zdiv(clock_us, 500000), 2);
   if let task &= db.view<SignalState>(signal) {
     if task.pass_by_at > 0 {
-      if clock_us - task.pass_by_at >= 4000000 {
-        return 2;
+      if clock_us - task.pass_by_at >= 2000000 {
+        return self.idle_texture_id;
       }
     }
 
     if task.state == SignalPhase::Stop {
       log("stop", signal.id);
-      let cycle = zmod(zdiv(clock_us, 500000), 2);  // Divide into 0.5s intervals
-      if cycle == 0 {
-        return 2;
+
+      if (self.blink_on_stop) {
+        if cycle == 0 {
+          return self.stop_texture_id;
+        } else {
+          return self.off_texture_id;
+        }
       } else {
-        return 0;
+        return self.stop_texture_id;
       }
     }
 
     if task.state == SignalPhase::Pass {
       log("pass", signal.id);
-      return 1;
+
+      if self.blink_on_pass {
+        if cycle == 0 {
+          return self.pass_texture_id;
+        } else {
+          return self.off_texture_id;
+        }
+      } else {
+        return self.pass_texture_id;
+      }
     }
 
     if task.state == SignalPhase::Caution {
       log("caution", signal.id);
-      return 3;
+      if self.blink_on_caution {
+        if cycle == 0 {
+          return self.caution_texture_id;
+        } else {
+          return self.off_texture_id;
+        }
+      } else {
+        return self.caution_texture_id;
+      }
     }
 
     if task.state == SignalPhase::Idle {
       log("idle", signal.id);
-      return 2;
+      if self.blink_on_idle {
+        if cycle == 0 {
+          return self.idle_texture_id;
+        } else {
+          return self.off_texture_id;
+        }
+      } else {
+        return self.idle_texture_id;
+      }
     }
   }
   
@@ -167,11 +206,19 @@ pub fn SignalPlusSignal::event_signal_texture_state(
     if let s &= db.view(signal_id) {
       if let ahead &= db.view<SignalState>(s) {
         if ahead.state == SignalPhase::Stop {
-          return 3;
+          if self.blink_on_caution {
+            if cycle == 0 {
+              return self.caution_texture_id;
+            } else {
+              return self.off_texture_id;
+            }
+          } else {
+            return self.caution_texture_id;
+          }
         }
       }
     }
   }
 
-  return 2;
+  return self.idle_texture_id;
 }
