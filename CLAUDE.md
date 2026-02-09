@@ -4,11 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ATB (Automatic Train Braking) signal system mod for NIMBY Rails. Implements 4-aspect signaling (Idle, Pass, Stop, Caution) with automatic speed enforcement.
+Signals Plus signal system mod for NIMBY Rails. Implements 4-aspect signaling (Idle, Pass, Stop, Caution) with automatic speed enforcement.
 
 ## Development Workflow
 
-1. Edit `src/atb.nimbyscript` directly
+1. Edit `src/signals-plus.nimbyscript` directly
 2. NIMBY Rails hot-reloads scripts on save
 3. Test in-game by placing signals and running trains
 
@@ -34,12 +34,12 @@ These language quirks cause common errors:
 
 ## Architecture
 
-### Script Structure (`src/atb.nimbyscript`)
+### Script Structure (`src/signals-plus.nimbyscript`)
 
-- **AtbSignalState enum**: Idle, Pass, Stop, Caution
-- **AtbSignal pub struct**: Extends Signal, player-configurable `signals_ahead` list
-- **AtbStation pub struct**: Extends Station, `approach_signals` for caution display
-- **AtbSignalTask private struct**: Runtime state attached to signals
+- **SignalPhase enum**: Idle, Pass, Stop, Caution
+- **SignalPlusSignal pub struct**: Extends Signal, player-configurable `signals_ahead` list
+- **SignalPlusStation pub struct**: Extends Station, `approach_signals` for caution display
+- **SignalState private struct**: Runtime state attached to signals
 
 ### Event Handlers
 

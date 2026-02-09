@@ -3,29 +3,29 @@ script meta {
   api: nimbyrails.v1,
 }
 
-enum AtbSignalState {
+enum SignalPhase {
   Idle,
   Pass,
   Stop,
   Caution,
 }
 
-pub struct AtbSignal extend Signal {
+pub struct SignalPlusSignal extend Signal {
   signals_ahead: &Vec<ID<Signal>>,
 }
 
-pub struct AtbStation extend Station {
+pub struct SignalPlusStation extend Station {
   approach_signals: &Vec<ID<Signal>>,
 }
 
-struct AtbSignalTask {
-  state: AtbSignalState,
+struct SignalState {
+  state: SignalPhase,
   pass_by_at: i64,
   is_approaching_station: bool,
 }
 
-pub fn AtbSignal::event_signal_lookahead(
-  self: &AtbSignal,
+pub fn SignalPlusSignal::event_signal_lookahead(
+  self: &SignalPlusSignal,
   ctx: &EventCtx,
   train: &Train,
   motion: &Motion,
@@ -37,13 +37,13 @@ pub fn AtbSignal::event_signal_lookahead(
 ) {
   // show idle if train is farther than 1km, to avoid unnecessary processing
   if train_distance > 1000.0 {
-    if let old_state &= ctx.db.view<AtbSignalTask>(signal) {
+    if let old_state &= ctx.db.view<SignalState>(signal) {
       sc.queue_erase(old_state);
     }
     return;
   }
 
-  let state mut= AtbSignalState::Idle;
+  let state mut= SignalPhase::Idle;
 
   if check == SignalCheck::Stop {
     if train_distance <= 25.0 {
@@ -54,7 +54,7 @@ pub fn AtbSignal::event_signal_lookahead(
   }
 
   if check == SignalCheck::Pass {
-    state = AtbSignalState::Pass;
+    state = SignalPhase::Pass;
   }
 
   let is_approach_signal mut= false;
@@ -63,8 +63,8 @@ pub fn AtbSignal::event_signal_lookahead(
     if let line &= ctx.db.view(run.line_id) {
       if let current_stop &= run_dispatch.current_stop(line) {
         if let station &= ctx.db.view(current_stop.station_id) {
-          if let atb_station &= ctx.db.view<AtbStation>(station) {
-            for approach_signal_id in atb_station.approach_signals.iter() {
+          if let sp_station &= ctx.db.view<SignalPlusStation>(station) {
+            for approach_signal_id in sp_station.approach_signals.iter() {
               if (approach_signal_id.equals(signal.id)) {
                 is_approach_signal = true;
                 break;
@@ -72,7 +72,7 @@ pub fn AtbSignal::event_signal_lookahead(
             }
 
             if is_approach_signal {
-              state = AtbSignalState::Caution;
+              state = SignalPhase::Caution;
             }
           }
         }
@@ -81,36 +81,36 @@ pub fn AtbSignal::event_signal_lookahead(
   }
 
   if check == SignalCheck::Stop {
-    state = AtbSignalState::Stop;
+    state = SignalPhase::Stop;
   }
 
-  if let old_state &= ctx.db.view<AtbSignalTask>(signal) {
+  if let old_state &= ctx.db.view<SignalState>(signal) {
     sc.queue_erase(old_state);
   }
 
-  let task = AtbSignalTask::new();
+  let task = SignalState::new();
   task.state = state;
   task.is_approaching_station = is_approach_signal;
   sc.queue_attach(signal, task);
 }
 
-pub fn AtbSignal::event_signal_pass_by(
-  self: &AtbSignal,
+pub fn SignalPlusSignal::event_signal_pass_by(
+  self: &SignalPlusSignal,
   ctx: &EventCtx,
   train: &Train,
   motion: &Motion,
   signal: &Signal,
   sc: &mut SimController
 ) {
-  if let old_state &= ctx.db.view<AtbSignalTask>(signal) {
+  if let old_state &= ctx.db.view<SignalState>(signal) {
     let state = old_state.state;
     sc.queue_erase(old_state);
-    let task = AtbSignalTask::new();
-    if (state == AtbSignalState::Stop || state == AtbSignalState::Idle) {
+    let task = SignalState::new();
+    if (state == SignalPhase::Stop || state == SignalPhase::Idle) {
       if (old_state.is_approaching_station) {
-        task.state = AtbSignalState::Caution;
+        task.state = SignalPhase::Caution;
       } else {
-        task.state = AtbSignalState::Pass;
+        task.state = SignalPhase::Pass;
       }
     }
     else {
@@ -123,21 +123,21 @@ pub fn AtbSignal::event_signal_pass_by(
 
 
 
-pub fn AtbSignal::event_signal_texture_state(
-  self: &AtbSignal,
+pub fn SignalPlusSignal::event_signal_texture_state(
+  self: &SignalPlusSignal,
   db: &DB,
   signal: &Signal,
   clock_us: i64,
   core_state: i64
 ): i64 {
-  if let task &= db.view<AtbSignalTask>(signal) {
+  if let task &= db.view<SignalState>(signal) {
     if task.pass_by_at > 0 {
       if clock_us - task.pass_by_at >= 4000000 {
         return 2;
       }
     }
 
-    if task.state == AtbSignalState::Stop {
+    if task.state == SignalPhase::Stop {
       log("stop", signal.id);
       let cycle = zmod(zdiv(clock_us, 500000), 2);  // Divide into 0.5s intervals
       if cycle == 0 {
@@ -147,17 +147,17 @@ pub fn AtbSignal::event_signal_texture_state(
       }
     }
 
-    if task.state == AtbSignalState::Pass {
+    if task.state == SignalPhase::Pass {
       log("pass", signal.id);
       return 1;
     }
 
-    if task.state == AtbSignalState::Caution {
+    if task.state == SignalPhase::Caution {
       log("caution", signal.id);
       return 3;
     }
 
-    if task.state == AtbSignalState::Idle {
+    if task.state == SignalPhase::Idle {
       log("idle", signal.id);
       return 2;
     }
@@ -165,8 +165,8 @@ pub fn AtbSignal::event_signal_texture_state(
   
   for signal_id in self.signals_ahead.iter() {
     if let s &= db.view(signal_id) {
-      if let ahead &= db.view<AtbSignalTask>(s) {
-        if ahead.state == AtbSignalState::Stop {
+      if let ahead &= db.view<SignalState>(s) {
+        if ahead.state == SignalPhase::Stop {
           return 3;
         }
       }

@@ -1,27 +1,27 @@
 [ModMeta]
 schema=1
-name=ATB Signals
+name=Signals Plus
 author=MickJ
-desc=Automatic Train Braking (ATB) signal system. Signals display caution when approaching a stop signal or scheduled station stop within braking distance.
+desc=
 version=1.0.0
 
 [Script]
-id=ATB_SIGNAL_SCRIPT
-name=ATB Signal Script
-source=src/atb.nimbyscript
+id=SIGNALS_PLUS_SCRIPT
+name=Signals Plus
+source=src/signals-plus.nimbyscript
 
 [SignalTextures]
-id=ATB_SIGNAL_TEXTURES
-name_loc=atb_signal_textures
-name_en=ATB Signal
+id=SIGNALS_PLUS_TEXTURES
+name_loc=signals_plus_textures
+name_en=Signals Plus Signal
 state=textures/none.png
 state=textures/green.png
 state=textures/red.png
 state=textures/amber.png
 
 [SignalTemplate]
-name_en=ATB Signal
-name_loc=atb_signal
+name_en=Signals Plus Signal
+name_loc=signals_plus_signal
 kind=path
-textures=ATB_SIGNAL_TEXTURES
-extend=AtbSignal
+textures=SIGNALS_PLUS_TEXTURES
+extend=SignalPlusSignal

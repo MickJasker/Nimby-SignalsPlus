@@ -1,6 +1,6 @@
-# ATB Signals for NIMBY Rails
+# Signals Plus for NIMBY Rails
 
-Automatic Train Braking (ATB) signal system for NIMBY Rails. Provides realistic signal aspects that warn trains of upcoming stops and enforce speed limits.
+Signals Plus signal system for NIMBY Rails. Provides realistic signal aspects that warn trains of upcoming stops and enforce speed limits.
 
 ## Features
 
@@ -22,17 +22,17 @@ Automatic Train Braking (ATB) signal system for NIMBY Rails. Provides realistic 
 
 ## Usage
 
-### Placing ATB Signals
+### Placing Signals Plus Signals
 
 1. Open the signal placement tool in NIMBY Rails
-2. Select "ATB Signal" from the signal types
+2. Select "Signals Plus Signal" from the signal types
 3. Place signals along your track
 
 ### Configuring Signal Chains
 
 To enable caution aspects, you need to link signals together:
 
-1. Select an ATB Signal
+1. Select a Signals Plus Signal
 2. In the signal properties, find the `signals_ahead` field
 3. Add the IDs of signals that are ahead on the track
 4. When any linked signal shows Stop, this signal will show Caution
@@ -48,7 +48,7 @@ To enable caution aspects, you need to link signals together:
 
 ### Speed Limits
 
-When approaching a Stop signal, the ATB system enforces:
+When approaching a Stop signal, Signals Plus enforces:
 - **Within 100m**: Maximum 40 km/h
 - **Within 25m**: Maximum 10 km/h
 
@@ -65,7 +65,7 @@ When approaching a Stop signal, the ATB system enforces:
 nimby-atb-signals/
 ├── mod.txt                 # Mod configuration
 ├── src/
-│   ├── atb.nimbyscript    # Signal logic
+│   ├── signals-plus.nimbyscript    # Signal logic
 │   └── AGENTS.md          # AI development guide
 ├── textures/
 │   ├── idle.png           # Idle state texture
@@ -77,17 +77,18 @@ nimby-atb-signals/
 
 ### Key Components
 
-**AtbSignalState** - Enum defining signal states:
+**SignalPhase** - Enum defining signal states:
 - `Idle` - No active display
 - `Pass` - Clear to proceed
 - `Stop` - Train must stop
+- `Caution` - Prepare to stop
 
-**AtbSignal** - Public struct extending Signal:
+**SignalPlusSignal** - Public struct extending Signal:
 - `signals_ahead` - List of signal IDs to check for caution state
 
-**AtbSignalTask** - Private runtime state:
+**SignalState** - Private runtime state:
 - `state` - Current signal state
-- `station_stop_ahead` - Whether a station stop is within braking distance
+- `is_approaching_station` - Whether approaching a configured station
 
 ### Event Handlers
 

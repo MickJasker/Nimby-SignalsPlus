@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This project implements ATB (Automatic Train Protection) signals for NIMBY Rails using NimbyScript. The goal is to create realistic signal behavior that enforces speed limits and stops based on signal state and train dynamics.
+This project implements Signals Plus signals for NIMBY Rails using NimbyScript. The goal is to create realistic signal behavior that enforces speed limits and stops based on signal state and train dynamics.
 
 ## Documentation Reference
 
@@ -375,13 +375,13 @@ Enable logging manually in the game UI.
 
 ## Project-Specific Notes
 
-This project implements ATB (Automatic Train Braking) signals.
+This project implements Signals Plus signals.
 
 ### Script Structure
 
-- **AtbSignalState enum**: `Idle`, `Pass`, `Stop`
-- **AtbSignal pub struct**: Extends Signal, contains `signals_ahead` list
-- **AtbSignalTask private struct**: Runtime state with `state` and `station_stop_ahead`
+- **SignalPhase enum**: `Idle`, `Pass`, `Stop`, `Caution`
+- **SignalPlusSignal pub struct**: Extends Signal, contains `signals_ahead` list
+- **SignalState private struct**: Runtime state with `state` and `is_approaching_station`
 
 ### Signal Behavior
 
@@ -402,6 +402,6 @@ When approaching a stop signal:
 
 ### Mod Files
 
-- `src/atb.nimbyscript` - Signal logic
+- `src/signals-plus.nimbyscript` - Signal logic
 - `mod.txt` - Mod configuration
 - `textures/` - Signal state textures (idle, pass, stop, caution)
