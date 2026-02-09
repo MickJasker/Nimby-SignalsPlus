@@ -51,6 +51,17 @@ pub fn SignalPlusSignal::event_signal_lookahead(
   sc: &mut SimpleSimController,
   result: &mut SignalLookaheadResult
 ) {
+  let current_speed = motion.presence.get().speed;
+  let max_brake = as_f64(motion.dynamics.max_regular_braking);
+  let brake_distance = (current_speed * current_speed) / (2.0 * max_brake);
+
+  if (brake_distance + 50.0) < train_distance {
+    if let old_state &= ctx.db.view<SignalState>(signal) {
+      sc.queue_erase(old_state);
+    }
+    return;
+  }
+
   // show idle if train is farther than 1km, to avoid unnecessary processing
   if train_distance > 1000.0 {
     if let old_state &= ctx.db.view<SignalState>(signal) {
