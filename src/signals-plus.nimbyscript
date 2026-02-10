@@ -11,7 +11,6 @@ enum SignalPhase {
 }
 
 pub struct SignalPlusSignal extend Signal {
-
   signals_ahead: &Vec<ID<Signal>> meta { label: "Signals Ahead", },
 
   off_texture_id: i64 meta { label: "Off Texture ID", default: 0, },
@@ -150,8 +149,6 @@ pub fn SignalPlusSignal::event_signal_texture_state(
     }
 
     if task.state == SignalPhase::Stop {
-      // log("stop", signal.id);
-
       if (self.blink_on_stop) {
         if cycle == 0 {
           return self.stop_texture_id;
