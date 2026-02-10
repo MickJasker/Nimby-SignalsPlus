@@ -11,27 +11,26 @@ enum SignalPhase {
 }
 
 pub struct SignalPlusSignal extend Signal {
-  meta { label: "Signals Plus Signal", description: "A signal that shows different aspects based on upcoming signals and train approach. Can show idle, pass, stop, and caution aspects. You can map your own custom signal by changing texture IDs." },
 
-  signals_ahead: &Vec<ID<Signal>> meta { label: "Signals Ahead" },
+  signals_ahead: &Vec<ID<Signal>> meta { label: "Signals Ahead", },
 
-  off_texture_id: i64 meta { label: "Off Texture ID", default: 0 },
+  off_texture_id: i64 meta { label: "Off Texture ID", default: 0, },
   
   idle_texture_id: i64 meta { label: "Idle Texture ID", default: 0, },
-  blink_on_idle: bool meta { label: "Blink on Idle", default: false, description: "If enabled, the signal will blink when in idle state using the 'off' texture." },
+  blink_on_idle: bool meta { label: "Blink on Idle", default: false, description: "If enabled, the signal will blink when in idle state using the 'off' texture.", },
 
-  pass_texture_id: i64 meta { label: "Pass Texture ID", default: 1 },
-  blink_on_pass: bool meta { label: "Blink on Pass", default: false, description: "If enabled, the signal will blink when in pass state using the 'off' texture." },
+  pass_texture_id: i64 meta { label: "Pass Texture ID", default: 1, },
+  blink_on_pass: bool meta { label: "Blink on Pass", default: false, description: "If enabled, the signal will blink when in pass state using the 'off' texture.", },
 
-  stop_texture_id: i64 meta { label: "Stop Texture ID", default: 2 },
-  blink_on_stop: bool meta { label: "Blink on Stop", default: false, description: "If enabled, the signal will blink when in stop state using the 'off' texture." },
+  stop_texture_id: i64 meta { label: "Stop Texture ID", default: 2, },
+  blink_on_stop: bool meta { label: "Blink on Stop", default: false, description: "If enabled, the signal will blink when in stop state using the 'off' texture.", },
 
-  caution_texture_id: i64 meta { label: "Caution Texture ID", default: 3 },
-  blink_on_caution: bool meta { label: "Blink on Caution", default: false, description: "If enabled, the signal will blink when in caution state using the 'off' texture." },
+  caution_texture_id: i64 meta { label: "Caution Texture ID", default: 3, },
+  blink_on_caution: bool meta { label: "Blink on Caution", default: false, description: "If enabled, the signal will blink when in caution state using the 'off' texture.", },
 }
 
 pub struct SignalPlusStation extend Station {
-  approach_signals: &Vec<ID<Signal>> meta { label: "Approach Signals", description: "List of signals that are considered approach signals for this station. When a train is approaching the station and sees one of these signals and is stopping at that station, the signal will show a caution aspect."},
+  approach_signals: &Vec<ID<Signal>> meta { label: "Approach Signals", description: "List of signals that are considered approach signals for this station. When a train is approaching the station and sees one of these signals and is stopping at that station, the signal will show a caution aspect.",},
 }
 
 struct SignalState {
@@ -51,27 +50,19 @@ pub fn SignalPlusSignal::event_signal_lookahead(
   sc: &mut SimpleSimController,
   result: &mut SignalLookaheadResult
 ) {
-  let current_speed = motion.presence.get().speed;
-  let max_brake = as_f64(motion.dynamics.max_regular_braking);
-  let brake_distance = (current_speed * current_speed) / (2.0 * max_brake);
-
-  if (brake_distance + 50.0) < train_distance {
-    if let old_state &= ctx.db.view<SignalState>(signal) {
-      sc.queue_erase(old_state);
+  let pos = signal.forward();
+  if let track &= ctx.db.view(pos.track_id) {
+    let track_speed = track.max_speed();
+    let max_brake = as_f64(motion.dynamics.max_regular_braking);
+    let brake_distance = max((track_speed * track_speed) / (2.0 * max_brake) * 2.0, 1000.0);
+    if (brake_distance) < train_distance {
+      return;
     }
-    return;
-  }
-
-  // show idle if train is farther than 1km, to avoid unnecessary processing
-  if train_distance > 1000.0 {
-    if let old_state &= ctx.db.view<SignalState>(signal) {
-      sc.queue_erase(old_state);
-    }
-    return;
+  } else {
+        return;
   }
 
   let state mut= SignalPhase::Idle;
-
   if check == SignalCheck::Pass {
     state = SignalPhase::Pass;
   }
@@ -159,7 +150,7 @@ pub fn SignalPlusSignal::event_signal_texture_state(
     }
 
     if task.state == SignalPhase::Stop {
-      log("stop", signal.id);
+      // log("stop", signal.id);
 
       if (self.blink_on_stop) {
         if cycle == 0 {
@@ -173,8 +164,6 @@ pub fn SignalPlusSignal::event_signal_texture_state(
     }
 
     if task.state == SignalPhase::Pass {
-      log("pass", signal.id);
-
       if self.blink_on_pass {
         if cycle == 0 {
           return self.pass_texture_id;
@@ -187,7 +176,6 @@ pub fn SignalPlusSignal::event_signal_texture_state(
     }
 
     if task.state == SignalPhase::Caution {
-      log("caution", signal.id);
       if self.blink_on_caution {
         if cycle == 0 {
           return self.caution_texture_id;
@@ -200,7 +188,6 @@ pub fn SignalPlusSignal::event_signal_texture_state(
     }
 
     if task.state == SignalPhase::Idle {
-      log("idle", signal.id);
       if self.blink_on_idle {
         if cycle == 0 {
           return self.idle_texture_id;
@@ -228,6 +215,14 @@ pub fn SignalPlusSignal::event_signal_texture_state(
           }
         }
       }
+    }
+  }
+
+  if (self.blink_on_idle) {
+    if cycle == 0 {
+      return self.idle_texture_id;
+    } else {
+      return self.off_texture_id;
     }
   }
 
