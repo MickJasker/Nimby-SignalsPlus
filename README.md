@@ -32,7 +32,7 @@ Each signal instance can be individually configured with custom texture IDs in t
 | Setting | Description | Default |
 |---------|-------------|---------|
 | **Off Texture ID** | Texture shown during blink "off" phase | 0 |
-| **Idle Texture ID** | Texture when no train is approaching | 0 |
+| **Idle Texture ID** | Texture when no train is approaching | 2 |
 | **Pass Texture ID** | Texture when clear to proceed | 1 |
 | **Stop Texture ID** | Texture when train must stop | 2 |
 | **Caution Texture ID** | Texture when approaching stop/station | 3 |

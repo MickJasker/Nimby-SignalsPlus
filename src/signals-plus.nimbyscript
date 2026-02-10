@@ -16,14 +16,14 @@ pub struct SignalPlusSignal extend Signal {
 
   off_texture_id: i64 meta { label: "Off Texture ID", default: 0, },
   
-  idle_texture_id: i64 meta { label: "Idle Texture ID", default: 0, },
+  idle_texture_id: i64 meta { label: "Idle Texture ID", default: 2, },
   blink_on_idle: bool meta { label: "Blink on Idle", default: false, description: "If enabled, the signal will blink when in idle state using the 'off' texture.", },
 
   pass_texture_id: i64 meta { label: "Pass Texture ID", default: 1, },
   blink_on_pass: bool meta { label: "Blink on Pass", default: false, description: "If enabled, the signal will blink when in pass state using the 'off' texture.", },
 
   stop_texture_id: i64 meta { label: "Stop Texture ID", default: 2, },
-  blink_on_stop: bool meta { label: "Blink on Stop", default: false, description: "If enabled, the signal will blink when in stop state using the 'off' texture.", },
+  blink_on_stop: bool meta { label: "Blink on Stop", default: true, description: "If enabled, the signal will blink when in stop state using the 'off' texture.", },
 
   caution_texture_id: i64 meta { label: "Caution Texture ID", default: 3, },
   blink_on_caution: bool meta { label: "Blink on Caution", default: false, description: "If enabled, the signal will blink when in caution state using the 'off' texture.", },
