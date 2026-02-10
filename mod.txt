@@ -13,15 +13,31 @@ source=src/signals-plus.nimbyscript
 [SignalTextures]
 id=SIGNALS_PLUS_TEXTURES
 name_loc=signals_plus_textures
-name_en=Signals Plus Signal
-state=textures/none.png
-state=textures/green.png
-state=textures/red.png
-state=textures/amber.png
+name_en=Signals Plus Signal Pill
+state=textures/color=none-shape=pill.png
+state=textures/color=green-shape=pill.png
+state=textures/color=red-shape=pill.png
+state=textures/color=amber-shape=pill.png
+
+[SignalTextures]
+id=SIGNALS_PLUS_TEXTURES_CIRCLE
+name_loc=signals_plus_textures_circle
+name_en=Signals Plus Signal Circle
+state=textures/color=none-shape=circle.png
+state=textures/color=green-shape=circle.png
+state=textures/color=red-shape=circle.png
+state=textures/color=amber-shape=circle.png
 
 [SignalTemplate]
-name_en=Signals Plus Signal
+name_en=Signals Plus Signal Pill
 name_loc=signals_plus_signal
 kind=path
 textures=SIGNALS_PLUS_TEXTURES
+extend=SignalPlusSignal
+
+[SignalTemplate]
+name_en=Signals Plus Signal Circle
+name_loc=signals_plus_signal_circle
+kind=path
+textures=SIGNALS_PLUS_TEXTURES_CIRCLE
 extend=SignalPlusSignal

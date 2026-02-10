@@ -11,20 +11,20 @@ enum SignalPhase {
 }
 
 pub struct SignalPlusSignal extend Signal {
-  signals_ahead: &Vec<ID<Signal>> meta { label: "Signals Ahead", },
+  signals_ahead: &Vec<ID<Signal>> meta { label: "Signals Ahead", description: "List of signals ahead to check for stop aspects. If any of these signals are showing a stop aspect, this signal will show a caution aspect.", },
 
-  off_texture_id: i64 meta { label: "Off Texture ID", default: 0, },
+  off_texture_id: i64 meta { label: "Off Texture ID", default: 0, description: "Texture shown during blink 'off' phase.", },
   
-  idle_texture_id: i64 meta { label: "Idle Texture ID", default: 2, },
+  idle_texture_id: i64 meta { label: "Idle Texture ID", default: 2, description: "Texture shown when no train is approaching.", },
   blink_on_idle: bool meta { label: "Blink on Idle", default: false, description: "If enabled, the signal will blink when in idle state using the 'off' texture.", },
 
-  pass_texture_id: i64 meta { label: "Pass Texture ID", default: 1, },
+  pass_texture_id: i64 meta { label: "Pass Texture ID", default: 1, description: "Texture shown when clear to proceed.", },
   blink_on_pass: bool meta { label: "Blink on Pass", default: false, description: "If enabled, the signal will blink when in pass state using the 'off' texture.", },
 
-  stop_texture_id: i64 meta { label: "Stop Texture ID", default: 2, },
+  stop_texture_id: i64 meta { label: "Stop Texture ID", default: 2, description: "Texture shown when train must stop.", },
   blink_on_stop: bool meta { label: "Blink on Stop", default: true, description: "If enabled, the signal will blink when in stop state using the 'off' texture.", },
 
-  caution_texture_id: i64 meta { label: "Caution Texture ID", default: 3, },
+  caution_texture_id: i64 meta { label: "Caution Texture ID", default: 3, description: "Texture shown when approaching a stop signal or station.", },
   blink_on_caution: bool meta { label: "Blink on Caution", default: false, description: "If enabled, the signal will blink when in caution state using the 'off' texture.", },
 }
 
