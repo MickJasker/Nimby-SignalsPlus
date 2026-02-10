@@ -1,130 +1,79 @@
 # Signals Plus for NIMBY Rails
 
-Signals Plus signal system for NIMBY Rails. Provides realistic signal aspects that warn trains of upcoming stops and enforce speed limits.
+A realistic 4-aspect signal system that brings intelligent signaling to your railway. Signals automatically detect train positions and upcoming stops to display the appropriate aspect.
 
 ## Features
 
-- **4-aspect signaling**: Idle, Pass, Stop, and Caution states
-- **Automatic caution detection**: Shows caution when:
-  - A signal ahead displays Stop
-  - A scheduled station stop is within braking distance
-- **Speed enforcement**: Automatically limits train speed when approaching stop signals
-- **Configurable signal chains**: Link signals together via the `signals_ahead` field
+**4-Aspect Signaling**
+- **Idle** - No train approaching (signal dark or dim)
+- **Pass** - Clear to proceed at full speed
+- **Caution** - Prepare to stop ahead
+- **Stop** - Train must halt at this signal
 
-## Installation
+**Intelligent Caution Detection**
+Signals automatically show caution when:
+- A linked signal ahead displays Stop
+- A train is approaching a scheduled station stop
 
-1. Download or clone this repository
-2. Copy the mod folder to your NIMBY Rails mods directory:
-   - Windows: `%APPDATA%\NIMBY Rails\mods\`
-   - macOS: `~/Library/Application Support/NIMBY Rails/mods/`
-   - Linux: `~/.local/share/NIMBY Rails/mods/`
-3. Enable the mod in-game via the Mods menu
+**Automatic Speed Enforcement**
+Trains are automatically slowed when approaching a Stop signal to ensure safe braking.
 
-## Usage
+**Blinking Support**
+Each signal state can be configured to blink, cycling between the state texture and an "off" texture. Perfect for creating realistic flashing signals.
 
-### Placing Signals Plus Signals
+## Works With Any Signal Model
 
-1. Open the signal placement tool in NIMBY Rails
-2. Select "Signals Plus Signal" from the signal types
-3. Place signals along your track
+This script is designed to work with **any signal that has multiple textures**. You are not limited to the included textures - use it with your own custom signal models or other workshop assets.
 
-### Configuring Signal Chains
+### Configuring Custom Texture IDs
 
-To enable caution aspects, you need to link signals together:
+Each signal instance can be individually configured with custom texture IDs in the signal properties:
 
+| Setting | Description | Default |
+|---------|-------------|---------|
+| **Off Texture ID** | Texture shown during blink "off" phase | 0 |
+| **Idle Texture ID** | Texture when no train is approaching | 0 |
+| **Pass Texture ID** | Texture when clear to proceed | 1 |
+| **Stop Texture ID** | Texture when train must stop | 2 |
+| **Caution Texture ID** | Texture when approaching stop/station | 3 |
+
+Simply set these IDs to match the texture indices of your signal model. This allows one script to control signals with completely different texture layouts.
+
+### Blinking Options
+
+For each state, you can enable blinking:
+- **Blink on Idle** - Flash when idle
+- **Blink on Pass** - Flash when showing pass
+- **Blink on Stop** - Flash when showing stop
+- **Blink on Caution** - Flash when showing caution
+
+When blinking is enabled, the signal alternates between the state's texture and the Off texture.
+
+> Make sure that your signal model has an off texture to make blinking work properly.
+
+## Setup Guide
+
+### Linking Signals Together
+
+To enable caution aspects based on signals ahead:
 1. Select a Signals Plus Signal
-2. In the signal properties, find the `signals_ahead` field
-3. Add the IDs of signals that are ahead on the track
-4. When any linked signal shows Stop, this signal will show Caution
+2. Find the **Signals Ahead** field in signal properties
+3. Add the IDs of signals further down the track
+4. When a linked signal shows Stop, this signal will show Caution
 
-### Signal Aspects
+### Station Approach Signals
 
-| Aspect | Meaning |
-|--------|---------|
-| Idle (dark) | No train approaching within 1km |
-| Pass (green) | Clear to proceed at full speed |
-| Caution (yellow) | Prepare to stop - reduce speed |
-| Stop (red) | Stop at this signal |
+To show caution when trains approach scheduled stops:
+1. Select a station and add the **Signals Plus Station** extension
+2. In the **Approach Signals** field, add signal IDs that should show caution for approaching trains
+3. Trains scheduled to stop will now see caution on these signals
 
-### Speed Limits
+## Signal Aspects Quick Reference
 
-When approaching a Stop signal, Signals Plus enforces:
-- **Within 100m**: Maximum 40 km/h
-- **Within 25m**: Maximum 10 km/h
+| Aspect | When Displayed |
+|--------|----------------|
+| Idle | No train within braking distance |
+| Pass | Train approaching, track ahead is clear |
+| Caution | Signal ahead is Stop, or approaching scheduled station stop |
+| Stop | Track block is occupied |
 
-## Development
-
-### Prerequisites
-
-- NIMBY Rails with modding support
-- Text editor for NimbyScript development
-
-### Project Structure
-
-```
-nimby-atb-signals/
-├── mod.txt                 # Mod configuration
-├── src/
-│   ├── signals-plus.nimbyscript    # Signal logic
-│   └── AGENTS.md          # AI development guide
-├── textures/
-│   ├── idle.png           # Idle state texture
-│   ├── pass.png           # Pass state texture
-│   ├── stop.png           # Stop state texture
-│   └── caution.png        # Caution state texture
-└── README.md
-```
-
-### Key Components
-
-**SignalPhase** - Enum defining signal states:
-- `Idle` - No active display
-- `Pass` - Clear to proceed
-- `Stop` - Train must stop
-- `Caution` - Prepare to stop
-
-**SignalPlusSignal** - Public struct extending Signal:
-- `signals_ahead` - List of signal IDs to check for caution state
-
-**SignalState** - Private runtime state:
-- `state` - Current signal state
-- `is_approaching_station` - Whether approaching a configured station
-
-### Event Handlers
-
-| Handler | Purpose |
-|---------|---------|
-| `event_signal_lookahead` | Called up to 15km ahead, sets speed limits and state |
-| `event_signal_pass_by` | Resets signal to Idle when train passes |
-| `event_signal_texture_state` | Returns texture index for current state |
-
-### Building & Testing
-
-1. Edit files in the `src/` directory
-2. Save changes - NIMBY Rails hot-reloads scripts
-3. Test in-game by placing signals and running trains
-
-### Documentation
-
-- [NimbyScript Language Reference](https://wiki.nimbyrails.com/NimbyScript)
-- [NIMBY Rails Modding Guide](https://steamcommunity.com/sharedfiles/filedetails/?id=2268014666)
-- [AGENTS.md](src/AGENTS.md) - Detailed development guide for AI assistants
-
-## Texture Requirements
-
-Signal textures must be:
-- 64x64 pixels
-- PNG format
-- 32-bit RGBA color (8 bits per channel)
-
-## License
-
-MIT License - Feel free to use, modify, and distribute.
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test in-game
-5. Submit a pull request
