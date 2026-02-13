@@ -28,6 +28,15 @@ state=textures/color=green-shape=circle.png
 state=textures/color=red-shape=circle.png
 state=textures/color=amber-shape=circle.png
 
+[SignalTextures]
+id=SIGNALS_PLUS_TEXTURES_TRIANGLE
+name_loc=signals_plus_textures_triangle
+name_en=Signals Plus Signal Triangle
+state=textures/color=none-shape=triangle.png
+state=textures/color=green-shape=triangle.png
+state=textures/color=red-shape=triangle.png
+state=textures/color=amber-shape=triangle.png
+
 [SignalTemplate]
 name_en=Signals Plus Signal Pill
 name_loc=signals_plus_signal
@@ -40,4 +49,11 @@ name_en=Signals Plus Signal Circle
 name_loc=signals_plus_signal_circle
 kind=path
 textures=SIGNALS_PLUS_TEXTURES_CIRCLE
+extend=SignalPlusSignal
+
+[SignalTemplate]
+name_en=Signals Plus Signal Triangle
+name_loc=signals_plus_signal_triangle
+kind=path
+textures=SIGNALS_PLUS_TEXTURES_TRIANGLE
 extend=SignalPlusSignal
