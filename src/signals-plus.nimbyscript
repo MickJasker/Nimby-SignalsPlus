@@ -160,6 +160,24 @@ pub fn SignalPlusSignal::event_signal_texture_state(
       }
     }
 
+    for signal_id in self.signals_ahead.iter() {
+      if let s &= db.view(signal_id) {
+        if let ahead &= db.view<SignalState>(s) {
+          if ahead.state == SignalPhase::Stop {
+            if self.blink_on_caution {
+              if cycle == 0 {
+                return self.caution_texture_id;
+              } else {
+                return self.off_texture_id;
+              }
+            } else {
+              return self.caution_texture_id;
+            }
+          }
+        }
+      }
+    }
+
     if task.state == SignalPhase::Pass {
       if self.blink_on_pass {
         if cycle == 0 {
@@ -193,24 +211,6 @@ pub fn SignalPlusSignal::event_signal_texture_state(
         }
       } else {
         return self.idle_texture_id;
-      }
-    }
-  }
-  
-  for signal_id in self.signals_ahead.iter() {
-    if let s &= db.view(signal_id) {
-      if let ahead &= db.view<SignalState>(s) {
-        if ahead.state == SignalPhase::Stop {
-          if self.blink_on_caution {
-            if cycle == 0 {
-              return self.caution_texture_id;
-            } else {
-              return self.off_texture_id;
-            }
-          } else {
-            return self.caution_texture_id;
-          }
-        }
       }
     }
   }
