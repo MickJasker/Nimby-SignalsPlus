@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Signals Plus signal system mod for NIMBY Rails. Implements 4-aspect signaling (Idle, Pass, Stop, Caution) with automatic speed enforcement.
+Signals Plus signal system mod for NIMBY Rails. Implements 5-aspect signaling (Idle, Pass, Stop, Caution, Drive on Sight) with automatic speed enforcement. Includes three built-in signal shapes (Pill, Circle, Triangle).
 
 ## Development Workflow
 
@@ -18,7 +18,7 @@ No build step required - the game interprets NimbyScript directly.
 
 - **NimbyScript Language**: https://wiki.nimbyrails.com/NimbyScript
 - **Modding Guide**: https://steamcommunity.com/sharedfiles/filedetails/?id=2268014666
-- **Detailed NimbyScript Reference**: See `src/AGENTS.md`
+- **Detailed NimbyScript Reference**: See NimbyScript wiki
 
 ## NimbyScript Critical Rules
 
@@ -36,7 +36,7 @@ These language quirks cause common errors:
 
 ### Script Structure (`src/signals-plus.nimbyscript`)
 
-- **SignalPhase enum**: Idle, Pass, Stop, Caution
+- **SignalPhase enum**: Idle, Pass, Stop, Caution, DriveOnSight
 - **SignalPlusSignal pub struct**: Extends Signal, player-configurable `signals_ahead` list
 - **SignalPlusStation pub struct**: Extends Station, `approach_signals` for caution display
 - **SignalState private struct**: Runtime state attached to signals
@@ -47,15 +47,24 @@ These language quirks cause common errors:
 |---------|---------|
 | `event_signal_lookahead` | Called up to 15km ahead, sets speed limits and signal state |
 | `event_signal_pass_by` | Resets state when train passes |
-| `event_signal_texture_state` | Returns texture index (0=idle, 1=pass, 2=stop, 3=caution) |
+| `event_signal_texture_state` | Returns texture index based on signal state and blink cycle |
+
+### Signal Shapes
+
+Three texture sets are defined in `mod.txt`, each as a separate `[SignalTextures]` + `[SignalTemplate]` pair:
+- **Pill** (`SIGNALS_PLUS_TEXTURES`) - Rounded rectangle
+- **Circle** (`SIGNALS_PLUS_TEXTURES_CIRCLE`) - Circular
+- **Triangle** (`SIGNALS_PLUS_TEXTURES_TRIANGLE`) - Triangular
 
 ### Texture Mapping
 
-Textures in `mod.txt` are indexed in order:
-- 0: `textures/idle.png`
-- 1: `textures/pass.png`
-- 2: `textures/stop.png`
-- 3: `textures/caution.png`
+Each shape has 4 textures indexed in order:
+- 0: `color=none` (off/idle)
+- 1: `color=green` (pass)
+- 2: `color=red` (stop)
+- 3: `color=amber` (caution / drive on sight)
+
+Texture naming convention: `textures/color={none,green,red,amber}-shape={pill,circle,triangle}.png`
 
 Textures must be 64x64 pixels, 32-bit RGBA PNG.
 

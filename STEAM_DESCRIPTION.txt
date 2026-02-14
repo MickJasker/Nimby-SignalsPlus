@@ -1,0 +1,116 @@
+A realistic 5-aspect signal system that brings intelligent signaling to your railway. Signals automatically detect train positions and upcoming stops to display the appropriate aspect.
+
+[h1]Features[/h1]
+
+[b]5-Aspect Signaling[/b]
+[list]
+[*] [b]Idle[/b] - No train approaching (signal dark or dim)
+[*] [b]Pass[/b] - Clear to proceed at full speed
+[*] [b]Caution[/b] - Prepare to stop ahead
+[*] [b]Stop[/b] - Train must halt at this signal
+[*] [b]Drive on Sight[/b] - Proceed with caution past a non-checking signal approaching a station
+[/list]
+
+[b]Intelligent Caution Detection[/b]
+Signals automatically show caution when:
+[list]
+[*] A linked signal ahead displays Stop
+[*] A train is approaching a scheduled station stop
+[/list]
+
+[b]Drive on Sight[/b]
+When an approach signal has "check beyond stops" disabled, the signal displays Drive on Sight instead of Caution. This indicates the driver should proceed at reduced speed past the signal. Blinks by default to distinguish it from a standard caution aspect.
+
+[b]Multiple Signal Shapes[/b]
+Three built-in signal texture sets are included:
+[list]
+[*] [b]Pill[/b] - Rounded rectangle shape
+[*] [b]Circle[/b] - Circular shape
+[*] [b]Triangle[/b] - Triangular shape
+[/list]
+
+[b]Blinking Support[/b]
+Each signal state can be configured to blink, cycling between the state texture and an "off" texture. Perfect for creating realistic flashing signals.
+
+[h1]Works With Any Signal Model[/h1]
+
+This script is designed to work with [b]any signal that has multiple textures[/b]. You are not limited to the included textures - use it with your own custom signal models or other workshop assets.
+
+[h2]Configuring Custom Texture IDs[/h2]
+
+Each signal instance can be individually configured with custom texture IDs in the signal properties:
+[list]
+[*] [b]Off Texture ID[/b] - Texture shown during blink "off" phase (default: 0)
+[*] [b]Idle Texture ID[/b] - Texture when no train is approaching (default: 2)
+[*] [b]Pass Texture ID[/b] - Texture when clear to proceed (default: 1)
+[*] [b]Stop Texture ID[/b] - Texture when train must stop (default: 2)
+[*] [b]Caution Texture ID[/b] - Texture when approaching stop/station (default: 3)
+[*] [b]Drive On Sight Texture ID[/b] - Texture when drive on sight is active (default: 3)
+[/list]
+
+Simply set these IDs to match the texture indices of your signal model. This allows one script to control signals with completely different texture layouts.
+
+[h2]Blinking Options[/h2]
+
+For each state, you can enable blinking:
+[list]
+[*] [b]Blink on Idle[/b] - Flash when idle
+[*] [b]Blink on Pass[/b] - Flash when showing pass
+[*] [b]Blink on Stop[/b] - Flash when showing stop (enabled by default)
+[*] [b]Blink on Caution[/b] - Flash when showing caution
+[*] [b]Blink on Drive On Sight[/b] - Flash when showing drive on sight (enabled by default)
+[/list]
+
+When blinking is enabled, the signal alternates between the state's texture and the Off texture.
+
+Make sure that your signal model has an off texture to make blinking work properly.
+
+[h1]Setup Guide[/h1]
+
+[h2]Linking Signals Together[/h2]
+
+To enable caution aspects based on signals ahead:
+[olist]
+[*] Select a Signals Plus Signal
+[*] Find the [b]Signals Ahead[/b] field in signal properties
+[*] Add the IDs of signals further down the track
+[*] When a linked signal shows Stop, this signal will show Caution
+[/olist]
+
+[h2]Station Approach Signals[/h2]
+
+To show caution when trains approach scheduled stops:
+[olist]
+[*] Select a station and add the [b]Signals Plus Station[/b] extension
+[*] In the [b]Approach Signals[/b] field, add signal IDs that should show caution for approaching trains
+[*] Trains scheduled to stop will now see caution on these signals
+[/olist]
+
+[h1]Signal Aspects Quick Reference[/h1]
+
+[table]
+[tr]
+[th]Aspect[/th]
+[th]When Displayed[/th]
+[/tr]
+[tr]
+[td]Idle[/td]
+[td]No train within braking distance[/td]
+[/tr]
+[tr]
+[td]Pass[/td]
+[td]Train approaching, track ahead is clear[/td]
+[/tr]
+[tr]
+[td]Caution[/td]
+[td]Signal ahead is Stop, or approaching scheduled station stop[/td]
+[/tr]
+[tr]
+[td]Drive on Sight[/td]
+[td]Approaching station at a signal with "check beyond stops" disabled[/td]
+[/tr]
+[tr]
+[td]Stop[/td]
+[td]Track block is occupied[/td]
+[/tr]
+[/table]

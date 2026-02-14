@@ -1,22 +1,29 @@
 # Signals Plus for NIMBY Rails
 
-A realistic 4-aspect signal system that brings intelligent signaling to your railway. Signals automatically detect train positions and upcoming stops to display the appropriate aspect.
+A realistic 5-aspect signal system that brings intelligent signaling to your railway. Signals automatically detect train positions and upcoming stops to display the appropriate aspect.
 
 ## Features
 
-**4-Aspect Signaling**
+**5-Aspect Signaling**
 - **Idle** - No train approaching (signal dark or dim)
 - **Pass** - Clear to proceed at full speed
 - **Caution** - Prepare to stop ahead
 - **Stop** - Train must halt at this signal
+- **Drive on Sight** - Proceed with caution past a non-checking signal approaching a station
 
 **Intelligent Caution Detection**
 Signals automatically show caution when:
 - A linked signal ahead displays Stop
 - A train is approaching a scheduled station stop
 
-**Automatic Speed Enforcement**
-Trains are automatically slowed when approaching a Stop signal to ensure safe braking.
+**Drive on Sight**
+When an approach signal has "check beyond stops" disabled, the signal displays Drive on Sight instead of Caution. This indicates the driver should proceed at reduced speed past the signal. Blinks by default to distinguish it from a standard caution aspect.
+
+**Multiple Signal Shapes**
+Three built-in signal texture sets are included:
+- **Pill** - Rounded rectangle shape
+- **Circle** - Circular shape
+- **Triangle** - Triangular shape
 
 **Blinking Support**
 Each signal state can be configured to blink, cycling between the state texture and an "off" texture. Perfect for creating realistic flashing signals.
@@ -36,6 +43,7 @@ Each signal instance can be individually configured with custom texture IDs in t
 | **Pass Texture ID** | Texture when clear to proceed | 1 |
 | **Stop Texture ID** | Texture when train must stop | 2 |
 | **Caution Texture ID** | Texture when approaching stop/station | 3 |
+| **Drive On Sight Texture ID** | Texture when drive on sight is active | 3 |
 
 Simply set these IDs to match the texture indices of your signal model. This allows one script to control signals with completely different texture layouts.
 
@@ -44,8 +52,9 @@ Simply set these IDs to match the texture indices of your signal model. This all
 For each state, you can enable blinking:
 - **Blink on Idle** - Flash when idle
 - **Blink on Pass** - Flash when showing pass
-- **Blink on Stop** - Flash when showing stop
+- **Blink on Stop** - Flash when showing stop (enabled by default)
 - **Blink on Caution** - Flash when showing caution
+- **Blink on Drive On Sight** - Flash when showing drive on sight (enabled by default)
 
 When blinking is enabled, the signal alternates between the state's texture and the Off texture.
 
@@ -75,5 +84,6 @@ To show caution when trains approach scheduled stops:
 | Idle | No train within braking distance |
 | Pass | Train approaching, track ahead is clear |
 | Caution | Signal ahead is Stop, or approaching scheduled station stop |
+| Drive on Sight | Approaching station at a signal with "check beyond stops" disabled |
 | Stop | Track block is occupied |
 
