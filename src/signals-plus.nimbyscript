@@ -8,6 +8,7 @@ enum SignalPhase {
   Pass,
   Stop,
   Caution,
+  DriveOnSight,
 }
 
 pub struct SignalPlusSignal extend Signal {
@@ -26,6 +27,9 @@ pub struct SignalPlusSignal extend Signal {
 
   caution_texture_id: i64 meta { label: "Caution Texture ID", default: 3, description: "Texture shown when approaching a stop signal or station.", },
   blink_on_caution: bool meta { label: "Blink on Caution", default: false, description: "If enabled, the signal will blink when in caution state using the 'off' texture.", },
+
+  drive_on_sight_texture_id: i64 meta { label: "Drive On Sight Texture ID", default: 3, description: "Texture shown when approaching a signal when 'check beyond stops is disabled on the signal'", },
+  blink_on_drive_on_sight: bool meta { label: "Blink on Drive On Sight", default: true, description: "If enabled, the signal will blink when in drive on sight state using the 'off' texture.", },
 }
 
 pub struct SignalPlusStation extend Station {
@@ -82,6 +86,10 @@ pub fn SignalPlusSignal::event_signal_lookahead(
 
             if is_approach_signal {
               state = SignalPhase::Caution;
+
+              if !signal.check_beyond_stops {
+                state = SignalPhase::DriveOnSight;
+              }
             }
           }
         }
@@ -211,6 +219,18 @@ pub fn SignalPlusSignal::event_signal_texture_state(
         }
       } else {
         return self.idle_texture_id;
+      }
+    }
+
+    if task.state == SignalPhase::DriveOnSight {
+      if self.blink_on_drive_on_sight {
+        if cycle == 0 {
+          return self.drive_on_sight_texture_id;
+        } else {
+          return self.off_texture_id;
+        }
+      } else {
+        return self.drive_on_sight_texture_id;
       }
     }
   }
