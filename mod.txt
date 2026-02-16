@@ -42,18 +42,18 @@ name_en=Signals Plus Signal Pill
 name_loc=signals_plus_signal
 kind=path
 textures=SIGNALS_PLUS_TEXTURES
-extend=SignalPlusSignal
+extend=SIGNALS_PLUS_SCRIPT SignalPlusSignal
 
 [SignalTemplate]
 name_en=Signals Plus Signal Circle
 name_loc=signals_plus_signal_circle
 kind=path
 textures=SIGNALS_PLUS_TEXTURES_CIRCLE
-extend=SignalPlusSignal
+extend=SIGNALS_PLUS_SCRIPT SignalPlusSignal
 
 [SignalTemplate]
 name_en=Signals Plus Signal Triangle
 name_loc=signals_plus_signal_triangle
 kind=path
 textures=SIGNALS_PLUS_TEXTURES_TRIANGLE
-extend=SignalPlusSignal
+extend=SIGNALS_PLUS_SCRIPT SignalPlusSignal
